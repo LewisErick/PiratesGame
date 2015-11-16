@@ -23,7 +23,7 @@ public class BoxPlatform extends Rigid{
 		
 	}
 	
-	public void Render(Graphics g) throws SlickException{
+	public void Render(Graphics g, Controller controller) throws SlickException{
 		super.boundingBox = new Rectangle(super.positionX, super.positionY, width, height);
 		g.drawRect(super.positionX, super.positionY, width, height);
 	}

@@ -69,7 +69,6 @@ public abstract class Enemy extends Character{
 		}
 	}
 	
-	
 	public void returnPosition(Controller controller, float delta) throws SlickException{
 		
 		if(Math.abs(x - this.positionX) < 5)

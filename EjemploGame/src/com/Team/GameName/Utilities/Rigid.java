@@ -74,11 +74,7 @@ public abstract class Rigid{
 	//ABSTRACT METHODS
 	public abstract void init() throws SlickException;
 	
-	public void Render(Graphics g, Controller controller) throws SlickException {
-		if(currentAnimation != null){
-			currentAnimation.draw(positionX + controller.positionX, positionY + controller.positionY, widthImage, heightImage);
-		}
-	}
+	public abstract void Render(Graphics g, Controller controller) throws SlickException;
 	
 	public abstract void Update(Controller controller, int delta) throws SlickException;
 }
