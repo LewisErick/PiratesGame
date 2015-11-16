@@ -1,11 +1,20 @@
 package com.Team.GameName.Weapons;
 
-public class Weapon {
+import org.newdawn.slick.SlickException;
 
-	protected float attackInterval;
-	protected float currentTime;
+import com.Team.GameName.Utilities.Rigid;
+
+public abstract class Weapon extends Rigid{
+
+	protected float attackInterval = 0.2f;
+	protected float currentTime = 0;
+	
+	public Weapon() throws SlickException {
+		super();
+	}
+	
 	public boolean canAttack() {
-		return currentTime < attackInterval;
+		return currentTime <= 0;
 	}
 
 }

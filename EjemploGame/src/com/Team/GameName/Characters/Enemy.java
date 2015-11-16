@@ -1,42 +1,19 @@
 package com.Team.GameName.Characters;
 
-import org.newdawn.slick.Color;
+import org.newdawn.slick.Animation;
 import org.newdawn.slick.Graphics;
-import org.newdawn.slick.Image;
 import org.newdawn.slick.SlickException;
 
+import com.Team.GameName.Characters.Pirate1.State;
 import com.Team.GameName.Utilities.Controller;
 
 public abstract class Enemy extends Character{
 	
-	private float x;
+	protected float x;
 	
-	public Enemy(Image image, float positionX, float positionY, int width, int height, int spriteX, int spriteY, int frames, int duration) throws SlickException {
+	public Enemy(float positionX, float positionY) throws SlickException {
+		super(positionX, positionY);
 		x = super.getPositionX();
-	}
-
-	@Override
-	public void init() throws SlickException {
-
-	}
-
-	@Override
-	public void Update(Controller controller, int delta) throws SlickException {
-		
-		
-	}
-	
-	public void Update2(Controller controller, int delta, MainCharacter Monillo) throws SlickException {
-		if (checkSight(controller,Monillo) == true)
-		{
-			chase(controller, delta, Monillo);
-			
-		}
-		else
-		{
-			returnPosition(controller,delta);
-		}
-		
 	}
 	
 	@Override
@@ -45,11 +22,8 @@ public abstract class Enemy extends Character{
 	}
 	
 	public boolean checkSight(Controller controller, MainCharacter mc){
-		
-		boolean OnSight = false;
-		boolean CheckRange = false;
-		OnSight = controller.doRayCast(mc, positionX, positionY, 32);
-		CheckRange = controller.checkRange(mc, positionX, positionY, 20);
+		boolean OnSight = controller.doRayCast(this, positionX, positionY, 200, MainCharacter.class);
+		boolean CheckRange = controller.checkRange(mc, positionX, positionY, 20);
 		if (OnSight && CheckRange)
 		{
 			return true;
@@ -58,39 +32,35 @@ public abstract class Enemy extends Character{
 	}
 	
 	public void chase(Controller controller, float delta, MainCharacter Monillo) throws SlickException{
-		if(controller.getRange(this,Monillo) > 5)
+		if(controller.getRange(this,Monillo) > 35)
 		{
 			if(Monillo.getPositionX() < this.positionX){
-			this.move(controller, delta, Direction.Left);
+				this.move(controller, delta, Direction.Left);
+				setAnimation(State.WALKLEFT);
 			}
 			if(Monillo.getPositionX() > this.positionX){
-			this.move(controller, delta, Direction.Right);
+				this.move(controller, delta, Direction.Right);
+				setAnimation(State.WALKRIGHT);
 			}
 		}
 	}
 	
 	public void returnPosition(Controller controller, float delta) throws SlickException{
-		
-		if(Math.abs(x - this.positionX) < 5)
-		{
-			this.move(controller, delta, Direction.Left);
-			
-		}
-		if(Math.abs(x - this.positionX) > 5)
-		{
+		if(Math.abs(x - this.positionX) < 5){
 			this.move(controller, delta, Direction.Right);
-			
+			setAnimation(State.WALKRIGHT);
 		}
-		
+		if(Math.abs(x - this.positionX) > 5){
+			this.move(controller, delta, Direction.Left);
+			setAnimation(State.WALKLEFT);
+		}
+	}
+	
+	protected void setAnimation(State state){
+		super.currentAnimation = super.states[state.ordinal()];
 	}
 	
 	public void dead(){
 		
-		
 	}
-	
-
-		
-	
-	
 }

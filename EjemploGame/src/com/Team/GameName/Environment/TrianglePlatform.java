@@ -4,12 +4,13 @@ import org.newdawn.slick.Graphics;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Polygon;
 
+import com.Team.GameName.Utilities.Collision;
 import com.Team.GameName.Utilities.Controller;
 import com.Team.GameName.Utilities.Rigid;
 
 
 
-public class TrianglePlatform extends Rigid{
+public class TrianglePlatform extends Rigid implements Collision{
 
 	protected float angle;
 	protected Side side;

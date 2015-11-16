@@ -1,8 +1,10 @@
 package com.Team.GameName.Utilities;
 
+import java.awt.Window.Type;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
+import org.lwjgl.opencl.CLSampler;
 import org.newdawn.slick.SlickException;
 import org.newdawn.slick.geom.Rectangle;
 import org.newdawn.slick.geom.Circle;
@@ -31,6 +33,16 @@ public class Controller extends ArrayList<Rigid>{
 		return null;
 	}
 	
+	public Rigid checkCollision(Rigid ob, float deltaX, float deltaY, Class<?> cls) throws SlickException{
+		ob.boundingBox = new Rectangle(ob.positionX+deltaX,ob.positionY+deltaY,32,32);
+		for(Rigid other : this){
+			if(ob != other && cls.isInstance(other) && ob.intersects(other)){
+				return other;
+			}
+		}
+		return null;
+	}
+	
 	public LinkedList<Rigid> checkListCollision(Rigid ob, float deltaX, float deltaY) throws SlickException{
 		ob.boundingBox = new Rectangle(ob.positionX+deltaX,ob.positionY+deltaY,32,32);
 		LinkedList<Rigid> list = new LinkedList<Rigid>();
@@ -43,7 +55,6 @@ public class Controller extends ArrayList<Rigid>{
 	}
 	
 	public LinkedList<Rigid> doRayCastList(Rigid ob, float rayX, float rayY, float range) {
-		// TODO Auto-generated method stub
 		Rectangle ray = new Rectangle(rayX,rayY,range,3);
 		LinkedList<Rigid> list = new LinkedList<Rigid>();
 		for(Rigid other : this){
@@ -54,11 +65,11 @@ public class Controller extends ArrayList<Rigid>{
 		return (list.size() == 0) ? null : list;
 	}
 	
-	public boolean doRayCast(Rigid ob, float rayX, float rayY, float range) {
+	public boolean doRayCast(Rigid ob, float rayX, float rayY, float range, Class<?> cls) {
 		// TODO Auto-generated method stub
 		Rectangle ray = new Rectangle(rayX,rayY,range,3);
 		for(Rigid other : this){
-			if(ob != other && ray.intersects(other.boundingBox)){
+			if(ob != other && cls.isInstance(other) && ray.intersects(other.boundingBox)){
 				return true;
 			}
 		}
