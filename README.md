@@ -12,8 +12,8 @@ This is a project made in Java using a basic video game library about pirates. O
 
 ###Credits
 
-Luis Zul
-René Sáenz
-Ivan Martínez
-Uriel Salazar
-Lizzie Cañamar
+- Luis Zul
+- René Sáenz
+- Ivan Martínez
+- Uriel Salazar
+- Lizzie Cañamar
