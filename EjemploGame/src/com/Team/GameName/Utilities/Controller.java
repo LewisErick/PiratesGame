@@ -4,95 +4,140 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import org.newdawn.slick.Music;
 import org.newdawn.slick.SlickException;
+import org.newdawn.slick.Sound;
 import org.newdawn.slick.geom.Circle;
 import org.newdawn.slick.geom.Rectangle;
 
+import com.Team.GameName.Characters.Enemy;
+import com.Team.GameName.Characters.MainCharacter;
 import com.Team.GameName.Utilities.Rigid.Direction;
 
-public final class Controller{
-	
-	private static Iterator<Rigid> i;
-	private static boolean gameOver = false;
-	
-	private static float positionX;
-	private static float positionY;
-	private static int score;
-
-	private static int width;
-	private static int height;
-	public static HashSet<Rigid> objects = null;
+public final class Controller {
+	/********************************************************************************
+	 *********************************** -FIELDS- ***********************************
+	 ********************************************************************************/
+	private float positionX;
+	private float positionY;
+	private int width;
+	private int height;
+	private int score;
+	private boolean gameOver = false;
+	private Iterator<Rigid> i;
+	private HashSet<Rigid> objects = new HashSet<Rigid>();
+	private HashSet<ASound> sounds = new HashSet<ASound>();
 	private static Controller instance = null;
 	
-	private Controller(int width, int height){
-		Controller.width = width;
-		Controller.height = height;
-		Controller.objects = null;
-		Controller.objects = new HashSet<Rigid>();
-		Controller.i = null;
-		Controller.gameOver = false;
-		Controller.score = 0;
-		Controller.positionX = 0;
-		Controller.positionY = 0;
-	}
-	
-	public static void newInstance(int width, int height){
-		instance = new Controller(width, height);
+	private Music music;
+	private Sound sound;
+	private String musicPath;
+
+	/********************************************************************************
+	 ******************************** -CONSTRUCTORS- ********************************
+	 ********************************************************************************/
+	public void setController(int width, int height) {
+		instance.positionX = 0;
+		instance.positionY = 0;
+		instance.width = width;
+		instance.height = height;
+		instance.gameOver = false;
+		i = null;
 	}
 
-	public static Controller getInstance(){
+	public static Controller getInstance() {
+		if(instance == null){
+			instance = new Controller();
+		}
 		return instance;
 	}
-	
-	public static void iterate(){
-		Controller.i = Controller.objects.iterator();
+
+	/********************************************************************************
+	 ********************************** -METHODS- ***********************************
+	 ********************************************************************************/
+	public void resetGame() {
+		instance.positionX = 0;
+		instance.positionY = 0;
+		instance.gameOver = false;
+		instance.i = null;
+		instance.objects.clear();
+	}
+
+	public void iterate() {
+		instance.i = instance.objects.iterator();
+	}
+
+	public static boolean hasNext() {
+		return instance.i.hasNext();
+	}
+
+	public static Rigid next() {
+		return instance.i.next();
+	}
+
+	public void add(Rigid ob) {
+		instance.objects.add(ob);
 	}
 	
-	public static boolean hasNext(){
-		return Controller.i.hasNext();
+	public void playMusic(String path) throws SlickException {
+		music = new Music(path);
+		music.loop();
+		musicPath = path;
+	}
+
+	public void addSound(String path, float volume, float positionX, float positionY) throws SlickException{
+		sounds.add(new ASound(path, volume, positionX, positionY));
 	}
 	
-	public static Rigid next(){
-		return Controller.i.next();
+	public void setSounds(Rigid ob){
+		for(ASound sound : sounds){
+			if(!sound.playing()){
+				sounds.remove(sound);
+				break;
+			}
+			sound.setVolume((500 - Controller.getInstance().getRange(positionX, positionY, ob))/5000);
+		}
 	}
 	
-	public static void add(Rigid ob){
-		Controller.objects.add(ob);
+	public void addAll(LinkedList<? extends Rigid> ob) {
+		instance.addAll(ob);
 	}
-	
-	public static void addAll(LinkedList<? extends Rigid> ob){
-		objects.addAll(ob);
-	}
-	
-	public static <T> T checkCollision(Rigid ob, float deltaX, float deltaY, Class<T> cls) throws SlickException{
-		ob.setBoundingBox(new Rectangle(ob.getPositionX()+deltaX,ob.getPositionY()+deltaY,ob.getWidth(),ob.getHeight()));
-		for(Rigid other : objects){
-			if(ob != other && cls.isInstance(other) && ob.intersects(other)){
+
+	public <T> T checkCollision(Rigid ob, float deltaX, float deltaY, Class<T> cls) throws SlickException {
+		ob.setBoundingBox(
+				new Rectangle(ob.getPositionX() + deltaX, ob.getPositionY() + deltaY, ob.getWidth(), ob.getHeight()));
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && ob.intersects(other)) {
 				return cls.cast(other);
 			}
 		}
 		return null;
 	}
-	
-	public static <T> LinkedList<T> checkCollisionList(Rigid ob, float deltaX, float deltaY, Class<T> cls) throws SlickException{
-		ob.setBoundingBox(new Rectangle(ob.getPositionX()+deltaX,ob.getPositionY()+deltaY,ob.getWidth(),ob.getHeight()));
+
+	public <T> LinkedList<T> checkCollisionList(Rigid ob, float deltaX, float deltaY, Class<T> cls)
+			throws SlickException {
+		ob.setBoundingBox(
+				new Rectangle(ob.getPositionX() + deltaX, ob.getPositionY() + deltaY, ob.getWidth(), ob.getHeight()));
 		LinkedList<T> list = new LinkedList<T>();
-		for(Rigid other : objects){
-			if(ob != other && ob.intersects(other)){
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && ob.intersects(other)) {
 				list.add(cls.cast(other));
 			}
 		}
-		return (list.size() == 0) ? null : list;
+		return list;
 	}
-	
-	public static <T> T doRayCast(Rigid ob, float range, float width, Class<T> cls) {
-		Rectangle ray = new Rectangle(ob.getDirection() == Direction.Right ? ob.getPositionX() : ob.getPositionX()-range, ob.getPositionY()-(width/2),range, width);
+
+	public <T> T doRayCast(Rigid ob, float range, float width, Class<T> cls) {
+		Rectangle ray = new Rectangle(
+				ob.getDirection() == Direction.Right ? ob.getPositionX() : ob.getPositionX() - range,
+				ob.getPositionY() - (width / 2), range, width);
 		float distance = 0;
 		T object = null;
-		for(Rigid other : objects){
-			if(ob != other && cls.isInstance(other) && ray.intersects(other.getBoundingBox())){
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && other.getBoundingBox() != null
+					&& ray.intersects(other.getBoundingBox())) {
 				float newDistance = getRange(ob, other);
-				if(distance <= 0 || newDistance < distance){
+				if (distance <= 0 || newDistance < distance) {
 					distance = newDistance;
 					object = cls.cast(other);
 				}
@@ -100,99 +145,141 @@ public final class Controller{
 		}
 		return object;
 	}
-	
-	public static <T> LinkedList<T> doRayCastList(Rigid ob, float rayX, float rayY, float range, Class<T> cls) {
-		
-		Rectangle ray = new Rectangle(rayX, rayY, ob.getDirection() == Direction.Right ? range : -range, 3);
+
+	public <T> LinkedList<T> doRayCastList(Rigid ob, float range, float width, Class<T> cls) {
+		Rectangle ray = new Rectangle(
+				ob.getDirection() == Direction.Right ? ob.getPositionX() : ob.getPositionX() - range,
+				ob.getPositionY() - (width / 2), range, width);
 		LinkedList<T> list = new LinkedList<T>();
-		for(Rigid other : objects){
-			if(ob != other && cls.isInstance(other) && ray.intersects(other.getBoundingBox())){
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && ray.intersects(other.getBoundingBox())) {
 				list.add(cls.cast(other));
 			}
 		}
-		return (list.size() == 0) ? null : list;
+		return list;
 	}
 
-	public static <T> LinkedList<T> checkRangeList(Rigid ob, float rangeX, float rangeY, float radius, Class<T> cls) {
+	public <T> LinkedList<T> checkRangeList(Rigid ob, float rangeX, float rangeY, float radius, Class<T> cls) {
 		Circle range = new Circle(rangeX, rangeY, radius);
 		LinkedList<T> list = new LinkedList<T>();
-		for(Rigid other : objects){
-			if(ob != other && cls.isInstance(other) && range.intersects(other.getBoundingBox())){
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && other.getBoundingBox() != null
+					&& range.intersects(other.getBoundingBox())) {
 				list.add(cls.cast(other));
 			}
 		}
-		return (list.size() == 0) ? null : list;
+		return list;
 	}
-	
-	public static <T> T checkRange(Rigid ob, float rangeX, float rangeY, float radius, Class<T> cls) {
-		Circle range = new Circle(rangeX,rangeY,radius);
-		for(Rigid other : objects){
-			if(ob != other && cls.isInstance(other) && range.intersects(other.getBoundingBox())){
+
+	public <T> T checkRange(Rigid ob, float radius, Class<T> cls) {
+		Circle range = new Circle(ob.getPositionX(), ob.getPositionY(), radius);
+		for (Rigid other : instance.objects) {
+			if (ob != other && cls.isInstance(other) && other.getBoundingBox() != null
+					&& range.intersects(other.getBoundingBox())) {
 				return cls.cast(other);
 			}
 		}
 		return null;
 	}
-	
-	public static float getRange (Rigid ob, Rigid target) {
-		return (float) Math.sqrt(Math.pow(ob.getPositionX() - target.getPositionX(), 2) + Math.pow(ob.getPositionY() - target.getPositionY(), 2));
+
+	public float getRange(Rigid ob, Rigid target) {
+		return (float) Math.sqrt(Math.pow(ob.getPositionX() - target.getPositionX(), 2)
+				+ Math.pow(ob.getPositionY() - target.getPositionY(), 2));
 	}
 	
-	public static void deleteControl(Rigid ob) {
-		objects.remove(ob);
-		Controller.i = Controller.objects.iterator();
+	public float getRange(float positionX, float positionY, Rigid target) {
+		return (float) Math.sqrt(Math.pow(positionX - target.getPositionX(), 2)
+				+ Math.pow(positionY - target.getPositionY(), 2));
 	}
-	
-	public static <T> boolean deleteControl(Class<T> cls) {
+
+	public void remove(Rigid ob) {
+		instance.objects.remove(ob);
+		i = instance.objects.iterator();
+	}
+
+	public <T> boolean remove(Class<T> cls) {
 		boolean found = false;
-		for(Rigid other : objects){
+		for (Rigid other : instance.objects) {
 			if (cls.isInstance(other)) {
-				objects.remove(other);
+				instance.objects.remove(other);
 				found = true;
 			}
 		}
 		return found;
 	}
 	
-	public static void follow(Rigid ob, float deltaX, float deltaY){
-		if(ob.getPositionX() > 300 && ob.getPositionX() < width-300){
-			positionX = ob.getPositionX()-300;
+	public void removeAll() {
+		remove(MainCharacter.class);
+	}
+
+	public void follow(Rigid ob, float deltaX, float deltaY) {
+		if (ob.getPositionX() > 300 && ob.getPositionX() < width - 300) {
+			positionX = ob.getPositionX() - 300;
+		}
+		if (ob.getPositionY() > 300 && ob.getPositionY() < height - 300) {
+			positionY = ob.getPositionY() - 300;
 		}
 	}
+
+	// GETTERS AND SETTERS
+	public boolean isGameOver() {
+		return instance.gameOver;
+	}
+
+	public void GameOver() {
+		instance.gameOver = true;
+	}
+
+	public void resetGameOver() {
+		instance.gameOver = false;
+	}
+
 	
-	
-	//GETTERS AND SETTERS
-	public static boolean isGameOver() {
-		return gameOver;
+	/********************************************************************************
+	 **************************** -GETTERS AND SETTERS- *****************************
+	 ********************************************************************************/
+	public float getPositionX() {
+		return instance.positionX;
 	}
-	public static void GameOver() {
-		Controller.gameOver = true;
+
+	public void setPositionX(float positionX) {
+		instance.positionX = positionX;
 	}
-	public static void resetGameOver() {
-		Controller.gameOver = false;
+
+	public float getPositionY() {
+		return instance.positionY;
 	}
-	public static float getPositionX() {
-		return positionX;
+
+	public void setPositionY(float positionY) {
+		instance.positionY = positionY;
 	}
-	public static void setPositionX(float positionX) {
-		Controller.positionX = positionX;
+
+	public int getScore() {
+		return instance.score;
 	}
-	public static float getPositionY() {
-		return positionY;
+
+	public void addScore(int points) {
+		instance.score += Math.abs(points);
 	}
-	public static void setPositionY(float positionY) {
-		Controller.positionY = positionY;
+
+	public void decreaseScore(int points) {
+		instance.score -= Math.abs(points);
 	}
-	public static int getScore() {
-		return score;
+
+	public int getWidth() {
+		return instance.width;
 	}
-	public static void addScore(int points) {
-		score += points;
+
+	public int getHeight() {
+		return instance.height;
 	}
-	public static int getWidth() {
-		return width;
-	}
-	public static int getHeight() {
-		return height;
+
+	public <T> T find(Class<T> cls) {
+		for(Rigid ob : instance.objects){
+			if(cls.isInstance(ob)){
+				return cls.cast(ob);
+			}
+		}
+		return null;
 	}
 }
